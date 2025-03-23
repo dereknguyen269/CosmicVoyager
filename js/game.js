@@ -50,16 +50,15 @@ class Game {
                 spawnRate: 1.5,
                 resourceMultiplier: 1.5,
                 playerHealth: 120,
-                victoryWaves: 5,  // Shorter game for easy mode
+                victoryWaves: 2,  // Reduced from 5 to 2
                 waveSettings: {
                     initialEnemies: 2,
-                    maxEnemiesPerWave: 6,
+                    maxEnemiesPerWave: 4, // Reduced from 6
                     enemyIncreasePerWave: 1,
-                    bossWaves: [5],  // Boss appears on final wave
+                    bossWaves: [2],  // Boss appears on final wave
                     specialWaves: {
-                        2: { type: 'scout', count: 4 },
-                        3: { type: 'fighter', count: 2 },
-                        4: { type: 'mixed', count: 4 }
+                        1: { type: 'scout', count: 3 },
+                        2: { type: 'fighter', count: 2 }
                     }
                 }
             },
@@ -70,16 +69,15 @@ class Game {
                 spawnRate: 1.0,
                 resourceMultiplier: 1.0,
                 playerHealth: 100,
-                victoryWaves: 8,
+                victoryWaves: 3, // Reduced from 8 to 3
                 waveSettings: {
                     initialEnemies: 3,
-                    maxEnemiesPerWave: 8,
+                    maxEnemiesPerWave: 6, // Reduced from 8
                     enemyIncreasePerWave: 1,
-                    bossWaves: [4, 8],  // Bosses appear twice
+                    bossWaves: [3],  // Boss appears on final wave
                     specialWaves: {
-                        3: { type: 'fighter', count: 3 },
-                        5: { type: 'mixed', count: 5 },
-                        6: { type: 'battleship', count: 1 }
+                        2: { type: 'fighter', count: 2 },
+                        3: { type: 'mixed', count: 3 }
                     }
                 }
             },
@@ -90,17 +88,16 @@ class Game {
                 spawnRate: 0.8,
                 resourceMultiplier: 0.8,
                 playerHealth: 80,
-                victoryWaves: 10,
+                victoryWaves: 4, // Reduced from 10 to 4
                 waveSettings: {
                     initialEnemies: 4,
-                    maxEnemiesPerWave: 10,
+                    maxEnemiesPerWave: 8, // Reduced from 10
                     enemyIncreasePerWave: 2,
-                    bossWaves: [5, 8, 10],  // More boss encounters
+                    bossWaves: [2, 4],  // Bosses appear twice
                     specialWaves: {
-                        3: { type: 'fighter', count: 4 },
-                        4: { type: 'battleship', count: 2 },
-                        6: { type: 'mixed', count: 6 },
-                        7: { type: 'elite', count: 1 }
+                        2: { type: 'fighter', count: 3 },
+                        3: { type: 'battleship', count: 1 },
+                        4: { type: 'mixed', count: 4 }
                     }
                 }
             },
@@ -111,18 +108,17 @@ class Game {
                 spawnRate: 0.6,
                 resourceMultiplier: 0.6,
                 playerHealth: 60,
-                victoryWaves: 12,
+                victoryWaves: 5, // Reduced from 12 to 5
                 waveSettings: {
                     initialEnemies: 5,
-                    maxEnemiesPerWave: 12,
+                    maxEnemiesPerWave: 10, // Reduced from 12
                     enemyIncreasePerWave: 2,
-                    bossWaves: [4, 7, 10, 12],  // Many boss encounters
+                    bossWaves: [3, 5],  // Bosses appear twice
                     specialWaves: {
-                        2: { type: 'fighter', count: 5 },
-                        3: { type: 'battleship', count: 3 },
-                        5: { type: 'mixed', count: 8 },
-                        6: { type: 'elite', count: 2 },
-                        8: { type: 'megaboss', count: 1 }
+                        2: { type: 'fighter', count: 4 },
+                        3: { type: 'battleship', count: 2 },
+                        4: { type: 'mixed', count: 5 },
+                        5: { type: 'elite', count: 1 }
                     }
                 }
             }
@@ -140,8 +136,8 @@ class Game {
         this.lastFrameTime = 0;
         
         // Add victory conditions
-        this.victoryWaves = 10; // Win after clearing 10 waves
-        this.victoryScore = 10000; // Win after reaching 10,000 points
+        this.victoryWaves = 3; // Reduced from 10 to 3 waves
+        this.victoryScore = 5000; // Reduced from 10000 to 5000 points
         this.isVictory = false;
         
         // Initialize the game
@@ -149,6 +145,29 @@ class Game {
         
         // Bind the gameOver method to ensure correct 'this' context
         this.gameOver = this.gameOver.bind(this);
+        
+        // Initialize resources
+        this.updateResourceDisplay();
+
+        this.isDemoMode = false;
+        this.demoControls = {
+            up: false,
+            down: false,
+            left: false,
+            right: false,
+            shoot: false
+        };
+        this.demoTimer = 0;
+        this.demoActions = [];
+
+        // Add event listeners
+        document.getElementById('start-button').addEventListener('click', () => this.startGame());
+        document.getElementById('difficulty-button').addEventListener('click', () => this.cycleDifficulty());
+        document.getElementById('demo-button').addEventListener('click', () => this.startDemoMode());
+        
+        // Add keyboard event listeners
+        document.addEventListener('keydown', (e) => this.handleKeyDown(e));
+        document.addEventListener('keyup', (e) => this.handleKeyUp(e));
     }
     
     init() {
@@ -711,9 +730,13 @@ class Game {
                 this.player.velocity.y *= 0.95;
             }
             
-            // Handle rotation
-            if (this.keys.left) this.player.rotation -= this.player.rotationSpeed * deltaTime;
-            if (this.keys.right) this.player.rotation += this.player.rotationSpeed * deltaTime;
+            // Handle rotation with smoother control
+            if (this.keys.left) {
+                this.player.rotation -= this.player.rotationSpeed * deltaTime;
+            }
+            if (this.keys.right) {
+                this.player.rotation += this.player.rotationSpeed * deltaTime;
+            }
             
             // Apply velocity
             this.player.x += this.player.velocity.x * deltaTime;
@@ -729,13 +752,11 @@ class Game {
                 this.player.y = this.height - this.player.height;
             }
             
-            // Handle continuous shooting with a cooldown (for held spacebar)
+            // Handle shooting with improved responsiveness
             if (this.keys.shoot && !this.isPaused) {
-                const now = Date.now();
-                if (now - this.player.lastShot > 1000 / this.player.fireRate) {
-                    this.player.lastShot = now;
-                    this.combatSystem.playerShoot();
-                    console.log("Shooting triggered by continuous fire!");
+                const projectiles = this.player.shoot();
+                if (projectiles && projectiles.length > 0) {
+                    this.combatSystem.addProjectiles(projectiles);
                 }
             }
         }
@@ -749,6 +770,25 @@ class Game {
         // Check for victory conditions
         if (!this.isGameOver && !this.isVictory) {
             this.checkVictoryConditions();
+        }
+
+        // Update demo mode
+        if (this.isDemoMode) {
+            this.updateDemo(deltaTime);
+            
+            // Apply demo controls
+            if (this.player) {
+                if (this.demoControls.up) this.player.velocity.y = -this.player.speed;
+                if (this.demoControls.down) this.player.velocity.y = this.player.speed;
+                if (this.demoControls.left) this.player.velocity.x = -this.player.speed;
+                if (this.demoControls.right) this.player.velocity.x = this.player.speed;
+                if (this.demoControls.shoot) {
+                    const projectiles = this.player.shoot();
+                    if (projectiles && projectiles.length > 0) {
+                        this.combatSystem.addProjectiles(projectiles);
+                    }
+                }
+            }
         }
     }
     
@@ -983,13 +1023,24 @@ class Game {
     }
 
     addResources(amount) {
-        this.resources = Math.round(this.resources + amount);
-        document.getElementById('resource-count').textContent = this.resources;
+        this.resources += amount;
+        this.updateResourceDisplay();
     }
 
     removeResources(amount) {
-        this.resources = Math.round(Math.max(0, this.resources - amount));
-        document.getElementById('resource-count').textContent = this.resources;
+        if (this.resources >= amount) {
+            this.resources -= amount;
+            this.updateResourceDisplay();
+            return true;
+        }
+        return false;
+    }
+
+    updateResourceDisplay() {
+        const resourceDisplay = document.getElementById('resource-count');
+        if (resourceDisplay) {
+            resourceDisplay.textContent = this.resources;
+        }
     }
 
     updateHUD() {
@@ -999,5 +1050,205 @@ class Game {
         // Add wave counter
         const waveInfo = `Wave ${this.combatSystem.currentWave}/${this.difficultySettings[this.currentDifficulty].victoryWaves}`;
         document.getElementById('wave-counter').textContent = waveInfo;
+    }
+
+    startDemoMode() {
+        // Hide all screens first
+        document.querySelectorAll('.screen').forEach(screen => {
+            screen.classList.add('hidden');
+        });
+        
+        // Show game screen
+        const gameScreen = document.getElementById('game-screen');
+        if (gameScreen) {
+            gameScreen.classList.remove('hidden');
+        }
+        
+        // Reset game state
+        this.reset();
+        
+        // Set demo mode
+        this.isDemoMode = true;
+        this.isRunning = true;
+        this.isPaused = false;
+        this.isGameOver = false;
+        
+        // Set difficulty to easy
+        this.currentDifficulty = 'easy';
+        
+        // Initialize player with better starting stats
+        this.player = new PlayerShip(this.width / 2, this.height / 2);
+        this.player.game = this;
+        this.player.fireRate = 2; // Faster fire rate
+        this.player.damage = 20; // More damage
+        this.player.multishot = 2; // Start with 2 shots
+        
+        // Set initial resources
+        this.resources = 1000; // Give more resources for demo
+        this.updateResourceDisplay();
+        
+        // Start combat system with fewer waves for demo
+        if (this.combatSystem) {
+            this.combatSystem.startCombat(2);
+            // Spawn initial enemies immediately
+            this.combatSystem.spawnEnemies(3);
+            // Start the combat loop
+            this.combatSystem.startCombatLoop();
+        }
+        
+        // Generate demo actions
+        this.generateDemoActions();
+        
+        // Start demo timer
+        this.demoTimer = 0;
+        
+        // Start game loop
+        this.lastFrameTime = performance.now();
+        this.gameLoop(this.lastFrameTime);
+        
+        // Hide demo button
+        const demoButton = document.getElementById('demo-button');
+        if (demoButton) {
+            demoButton.style.display = 'none';
+        }
+    }
+
+    executeDemoAction(action) {
+        switch (action.action) {
+            case 'start':
+                // Start combat system and spawn initial enemies
+                if (this.combatSystem) {
+                    this.combatSystem.startCombat(2);
+                    this.combatSystem.spawnEnemies(3);
+                    this.combatSystem.startCombatLoop();
+                }
+                break;
+            case 'move':
+                this.demoControls[action.direction] = true;
+                setTimeout(() => {
+                    this.demoControls[action.direction] = false;
+                }, 2000);
+                break;
+            case 'shoot':
+                // Force shooting through combat system
+                if (this.combatSystem) {
+                    this.combatSystem.playerShoot();
+                }
+                // Also trigger player's shoot method directly
+                if (this.player) {
+                    this.player.shoot();
+                }
+                break;
+            case 'upgrade':
+                if (this.player && this.resources >= 100) {
+                    this.player.upgradePart(action.part);
+                    this.resources -= 100;
+                    this.updateResourceDisplay();
+                }
+                break;
+            case 'victory':
+                // Force victory conditions
+                this.score = 5000;
+                this.combatSystem.wavesCleared = 2;
+                this.victory();
+                break;
+            case 'end':
+                this.endDemo();
+                break;
+        }
+    }
+
+    generateDemoActions() {
+        this.demoActions = [];
+        
+        // Initial setup
+        this.demoActions.push({ time: 0, action: 'start' });
+        
+        // Initial upgrades to make the ship stronger
+        this.demoActions.push({ time: 2000, action: 'upgrade', part: 'weapons' });
+        this.demoActions.push({ time: 4000, action: 'upgrade', part: 'engine' });
+        this.demoActions.push({ time: 6000, action: 'upgrade', part: 'shield' });
+        
+        // Combat demonstration with more frequent shooting
+        for (let i = 0; i < 5; i++) {
+            // Move to position
+            this.demoActions.push({ time: 8000 + i * 8000, action: 'move', direction: 'up' });
+            this.demoActions.push({ time: 10000 + i * 8000, action: 'move', direction: 'right' });
+            
+            // Shoot at enemies more frequently
+            this.demoActions.push({ time: 12000 + i * 8000, action: 'shoot' });
+            this.demoActions.push({ time: 13000 + i * 8000, action: 'shoot' });
+            this.demoActions.push({ time: 14000 + i * 8000, action: 'shoot' });
+            
+            // Move to next position
+            this.demoActions.push({ time: 16000 + i * 8000, action: 'move', direction: 'down' });
+            this.demoActions.push({ time: 18000 + i * 8000, action: 'move', direction: 'left' });
+        }
+        
+        // Final upgrades before victory
+        this.demoActions.push({ time: 45000, action: 'upgrade', part: 'weapons' });
+        this.demoActions.push({ time: 47000, action: 'upgrade', part: 'engine' });
+        
+        // Victory sequence
+        this.demoActions.push({ time: 50000, action: 'victory' });
+        
+        // End demo after victory
+        this.demoActions.push({ time: 55000, action: 'end' });
+    }
+
+    updateDemo(deltaTime) {
+        if (!this.isDemoMode) return;
+        
+        this.demoTimer += deltaTime;
+        
+        // Process demo actions
+        while (this.demoActions.length > 0 && this.demoActions[0].time <= this.demoTimer) {
+            const action = this.demoActions.shift();
+            this.executeDemoAction(action);
+        }
+        
+        // Check if demo should end
+        if (this.demoActions.length === 0) {
+            this.endDemo();
+        }
+    }
+
+    endDemo() {
+        this.isDemoMode = false;
+        this.isRunning = false;
+        this.isGameOver = true;
+        
+        // Show demo complete message
+        const message = document.createElement('div');
+        message.className = 'demo-complete';
+        message.textContent = 'Demo Complete!';
+        document.getElementById('game-screen').appendChild(message);
+        
+        // Show menu after delay
+        setTimeout(() => {
+            this.showMenu();
+        }, 3000);
+    }
+
+    showMenu() {
+        // Hide all screens first
+        document.querySelectorAll('.screen').forEach(screen => {
+            screen.classList.add('hidden');
+        });
+        
+        // Show menu screen
+        const menuScreen = document.getElementById('menu-screen');
+        if (menuScreen) {
+            menuScreen.classList.remove('hidden');
+        }
+        
+        // Reset game state
+        this.reset();
+        
+        // Show demo button again
+        const demoButton = document.getElementById('demo-button');
+        if (demoButton) {
+            demoButton.style.display = 'block';
+        }
     }
 }

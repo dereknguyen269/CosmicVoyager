@@ -124,14 +124,165 @@ class PlanetSystem {
     
     drawPlanets(ctx) {
         for (const planet of this.planets) {
-            // Draw planet
-            ctx.fillStyle = planet.color;
+            // Draw atmosphere glow
+            if (planet.type !== 'rocky') {
+                const atmosphereGradient = ctx.createRadialGradient(
+                    planet.x, planet.y, planet.radius,
+                    planet.x, planet.y, planet.radius * 1.5
+                );
+                
+                switch (planet.type) {
+                    case 'gas':
+                        atmosphereGradient.addColorStop(0, 'rgba(232, 195, 112, 0.3)');
+                        atmosphereGradient.addColorStop(1, 'rgba(232, 195, 112, 0)');
+                        break;
+                    case 'ice':
+                        atmosphereGradient.addColorStop(0, 'rgba(160, 224, 224, 0.3)');
+                        atmosphereGradient.addColorStop(1, 'rgba(160, 224, 224, 0)');
+                        break;
+                    case 'volcanic':
+                        atmosphereGradient.addColorStop(0, 'rgba(212, 64, 0, 0.3)');
+                        atmosphereGradient.addColorStop(1, 'rgba(212, 64, 0, 0)');
+                        break;
+                    case 'alien':
+                        atmosphereGradient.addColorStop(0, 'rgba(128, 255, 128, 0.3)');
+                        atmosphereGradient.addColorStop(1, 'rgba(128, 255, 128, 0)');
+                        break;
+                }
+                
+                ctx.fillStyle = atmosphereGradient;
+                ctx.beginPath();
+                ctx.arc(planet.x, planet.y, planet.radius * 1.5, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            
+            // Draw planet rings for gas giants
+            if (planet.type === 'gas') {
+                ctx.save();
+                ctx.translate(planet.x, planet.y);
+                ctx.rotate(Date.now() * 0.0001); // Slow rotation
+                
+                // Inner ring
+                ctx.strokeStyle = 'rgba(232, 195, 112, 0.5)';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.arc(0, 0, planet.radius * 1.2, 0, Math.PI * 2);
+                ctx.stroke();
+                
+                // Outer ring
+                ctx.strokeStyle = 'rgba(240, 215, 138, 0.3)';
+                ctx.lineWidth = 5;
+                ctx.beginPath();
+                ctx.arc(0, 0, planet.radius * 1.5, 0, Math.PI * 2);
+                ctx.stroke();
+                
+                ctx.restore();
+            }
+            
+            // Draw planet surface
+            ctx.save();
+            ctx.translate(planet.x, planet.y);
+            
+            // Add rotation based on planet type
+            const rotationSpeed = {
+                rocky: 0.00005,
+                gas: 0.00003,
+                ice: 0.00004,
+                volcanic: 0.00006,
+                alien: 0.00007
+            }[planet.type] || 0;
+            
+            ctx.rotate(Date.now() * rotationSpeed);
+            
+            // Draw planet body with gradient
+            const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, planet.radius);
+            gradient.addColorStop(0, planet.color);
+            gradient.addColorStop(1, this.adjustColor(planet.color, -20));
+            
+            ctx.fillStyle = gradient;
             ctx.beginPath();
-            ctx.arc(planet.x, planet.y, planet.radius, 0, Math.PI * 2);
+            ctx.arc(0, 0, planet.radius, 0, Math.PI * 2);
             ctx.fill();
             
+            // Add surface details based on planet type
+            switch (planet.type) {
+                case 'rocky':
+                    // Draw craters
+                    for (let i = 0; i < 5; i++) {
+                        const angle = (Math.PI * 2 * i) / 5;
+                        const x = Math.cos(angle) * planet.radius * 0.8;
+                        const y = Math.sin(angle) * planet.radius * 0.8;
+                        
+                        // Crater shadow
+                        ctx.fillStyle = this.adjustColor(planet.color, -30);
+                        ctx.beginPath();
+                        ctx.arc(x, y, planet.radius * 0.15, 0, Math.PI * 2);
+                        ctx.fill();
+                        
+                        // Crater highlight
+                        ctx.fillStyle = this.adjustColor(planet.color, 30);
+                        ctx.beginPath();
+                        ctx.arc(x * 0.7, y * 0.7, planet.radius * 0.1, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                    break;
+                    
+                case 'ice':
+                    // Draw ice patterns
+                    ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+                    ctx.lineWidth = 2;
+                    for (let i = 0; i < 8; i++) {
+                        const angle = (Math.PI * 2 * i) / 8;
+                        ctx.beginPath();
+                        ctx.moveTo(0, 0);
+                        ctx.lineTo(
+                            Math.cos(angle) * planet.radius,
+                            Math.sin(angle) * planet.radius
+                        );
+                        ctx.stroke();
+                    }
+                    break;
+                    
+                case 'volcanic':
+                    // Draw lava cracks
+                    ctx.strokeStyle = '#ff6600';
+                    ctx.lineWidth = 3;
+                    for (let i = 0; i < 6; i++) {
+                        const angle = (Math.PI * 2 * i) / 6;
+                        ctx.beginPath();
+                        ctx.moveTo(0, 0);
+                        ctx.lineTo(
+                            Math.cos(angle) * planet.radius * 0.8,
+                            Math.sin(angle) * planet.radius * 0.8
+                        );
+                        ctx.stroke();
+                    }
+                    break;
+                    
+                case 'alien':
+                    // Draw alien patterns
+                    ctx.strokeStyle = '#00ff00';
+                    ctx.lineWidth = 2;
+                    for (let i = 0; i < 12; i++) {
+                        const angle = (Math.PI * 2 * i) / 12;
+                        ctx.beginPath();
+                        ctx.arc(
+                            Math.cos(angle) * planet.radius * 0.6,
+                            Math.sin(angle) * planet.radius * 0.6,
+                            planet.radius * 0.1,
+                            0,
+                            Math.PI * 2
+                        );
+                        ctx.stroke();
+                    }
+                    break;
+            }
+            
+            ctx.restore();
+            
             // Draw orbit
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+            ctx.lineWidth = 1;
             ctx.beginPath();
             ctx.arc(planet.x, planet.y, planet.radius + 5, 0, Math.PI * 2);
             ctx.stroke();
@@ -139,16 +290,31 @@ class PlanetSystem {
             // Draw name if visited or home
             if (planet.visited || planet.id === 'home') {
                 ctx.fillStyle = '#ffffff';
-                ctx.font = '12px Arial';
+                ctx.font = 'bold 14px Arial';
                 ctx.textAlign = 'center';
-                ctx.fillText(planet.name, planet.x, planet.y - planet.radius - 10);
+                ctx.fillText(planet.name, planet.x, planet.y - planet.radius - 15);
+                
+                // Draw difficulty stars
+                if (planet.difficulty > 0) {
+                    ctx.fillStyle = '#ffcc00';
+                    ctx.fillText('⭐'.repeat(planet.difficulty), planet.x, planet.y - planet.radius - 30);
+                }
             } else {
                 ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
-                ctx.font = '12px Arial';
+                ctx.font = 'bold 14px Arial';
                 ctx.textAlign = 'center';
-                ctx.fillText('???', planet.x, planet.y - planet.radius - 10);
+                ctx.fillText('???', planet.x, planet.y - planet.radius - 15);
             }
         }
+    }
+    
+    // Helper function to adjust color brightness
+    adjustColor(color, amount) {
+        const hex = color.replace('#', '');
+        const r = Math.max(0, Math.min(255, parseInt(hex.substr(0, 2), 16) + amount));
+        const g = Math.max(0, Math.min(255, parseInt(hex.substr(2, 2), 16) + amount));
+        const b = Math.max(0, Math.min(255, parseInt(hex.substr(4, 2), 16) + amount));
+        return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
     }
     
     checkPlanetCollision(x, y) {

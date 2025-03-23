@@ -10,7 +10,12 @@ class ShipBuilder {
         this.canvas.width = 400;
         this.canvas.height = 300;
         
+        // Get or create ship preview container
         this.shipPreview = document.getElementById('ship-preview');
+        if (!this.shipPreview) {
+            console.error("Ship preview container not found!");
+            return;
+        }
         
         // Clear any existing canvases in the preview
         while (this.shipPreview.firstChild) {
@@ -52,38 +57,45 @@ class ShipBuilder {
         });
         
         // Save ship button
-        document.getElementById('save-ship').addEventListener('click', () => {
-            if (this.selectedPart && this.game.player) {
-                const partLevel = this.game.player.parts[this.selectedPart].level;
-                const nextLevel = partLevel + 1;
-                
-                if (nextLevel <= this.game.player.parts[this.selectedPart].maxLevel) {
-                    const cost = Math.round(this.partCosts[this.selectedPart][partLevel - 1]);
+        const saveButton = document.getElementById('save-ship');
+        if (saveButton) {
+            saveButton.addEventListener('click', () => {
+                if (this.selectedPart && this.game.player) {
+                    const partLevel = this.game.player.parts[this.selectedPart].level;
+                    const nextLevel = partLevel + 1;
                     
-                    if (this.game.resources >= cost) {
-                        this.game.removeResources(cost);
+                    if (nextLevel <= this.game.player.parts[this.selectedPart].maxLevel) {
+                        const cost = this.partCosts[this.selectedPart][partLevel - 1];
                         
-                        this.game.player.upgradePart(this.selectedPart);
-                        this.updatePreview();
-                        
-                        // Show success message
-                        this.showMessage(`Upgraded ${this.selectedPart} to level ${nextLevel}!`, 'success');
+                        if (this.game.resources >= cost) {
+                            this.game.resources -= cost;
+                            document.getElementById('resource-count').textContent = this.game.resources;
+                            
+                            this.game.player.upgradePart(this.selectedPart);
+                            this.updatePreview();
+                            
+                            // Show success message
+                            this.showMessage(`Upgraded ${this.selectedPart} to level ${nextLevel}!`, 'success');
+                        } else {
+                            // Show error message
+                            this.showMessage(`Not enough resources! Need ${cost} resources.`, 'error');
+                        }
                     } else {
-                        // Show error message
-                        this.showMessage(`Not enough resources! Need ${cost} resources.`, 'error');
+                        this.showMessage(`${this.selectedPart} is already at max level!`, 'error');
                     }
                 } else {
-                    this.showMessage(`${this.selectedPart} is already at max level!`, 'error');
+                    this.showMessage('Select a part to upgrade first!', 'error');
                 }
-            } else {
-                this.showMessage('Select a part to upgrade first!', 'error');
-            }
-        });
+            });
+        }
         
         // Exit builder button
-        document.getElementById('exit-builder').addEventListener('click', () => {
-            this.close();
-        });
+        const exitButton = document.getElementById('exit-builder');
+        if (exitButton) {
+            exitButton.addEventListener('click', () => {
+                this.close();
+            });
+        }
     }
     
     open() {
@@ -232,18 +244,16 @@ class ShipBuilder {
     
     showMessage(text, type) {
         // Create message element if it doesn't exist
-        let messageEl = document.getElementById('builder-message');
+        let messageEl = document.querySelector('.builder-message');
         if (!messageEl) {
             messageEl = document.createElement('div');
-            messageEl.id = 'builder-message';
+            messageEl.className = `builder-message ${type}`;
             document.getElementById('builder-screen').appendChild(messageEl);
         }
         
         // Set message text and style
         messageEl.textContent = text;
-        messageEl.className = type;
-        
-        // Show message
+        messageEl.className = `builder-message ${type}`;
         messageEl.style.display = 'block';
         
         // Hide message after 3 seconds

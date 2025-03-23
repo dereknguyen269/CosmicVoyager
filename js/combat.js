@@ -18,6 +18,8 @@ class CombatSystem {
         this.maxEnemies = 10;
         this.spawnInterval = 2000; // 2 seconds
         this.currentWave = 0;
+        this.powerUps = [];
+        this.powerUpChance = 0.3; // 30% chance for power-up on kill
         
         // Simple error logging
         this.handleError = (msg, url, line) => {
@@ -339,7 +341,6 @@ class CombatSystem {
                     const enemy = this.enemies[j];
                     
                     if (checkCollision(projectile, enemy)) {
-                        // Enemy takes damage
                         const isDestroyed = enemy.takeDamage(projectile.damage);
                         
                         if (isDestroyed) {
@@ -377,6 +378,14 @@ class CombatSystem {
                                 );
                                 
                                 this.game.resources_.push(resource);
+                            }
+
+                            // Chance to spawn power-up
+                            if (Math.random() < this.powerUpChance) {
+                                this.spawnPowerUp(
+                                    enemy.x + enemy.width / 2,
+                                    enemy.y + enemy.height / 2
+                                );
                             }
                         } else {
                             // Create hit effect
@@ -416,6 +425,37 @@ class CombatSystem {
             console.log(`Starting Wave ${this.currentWave}`);
             this.spawnWave(this.currentWave);
         }
+
+        // Update and check power-ups
+        for (let i = this.powerUps.length - 1; i >= 0; i--) {
+            const powerUp = this.powerUps[i];
+            
+            // Check if power-up expired
+            if (powerUp.update(deltaTime)) {
+                this.powerUps.splice(i, 1);
+                continue;
+            }
+            
+            // Check collision with player
+            if (this.game.player && checkCollision(powerUp, this.game.player)) {
+                // Apply power-up effect and get message
+                const message = powerUp.applyEffect(this.game.player);
+                
+                // Show floating text
+                this.showFloatingText(
+                    powerUp.x,
+                    powerUp.y,
+                    message,
+                    powerUp.powerUpStyles[powerUp.type].color
+                );
+                
+                // Remove power-up
+                this.powerUps.splice(i, 1);
+                
+                // Update UI
+                document.getElementById('health-value').textContent = Math.round(this.game.player.health);
+            }
+        }
     }
     
     draw(ctx) {
@@ -427,6 +467,11 @@ class CombatSystem {
         // Draw projectiles
         for (const projectile of this.projectiles) {
             projectile.draw(ctx);
+        }
+
+        // Draw power-ups
+        for (const powerUp of this.powerUps) {
+            powerUp.draw(ctx);
         }
     }
     
@@ -468,6 +513,35 @@ class CombatSystem {
         return projectile;
     }
     
+    addProjectiles(projectiles) {
+        if (!Array.isArray(projectiles)) return;
+        
+        console.log("Adding projectiles:", projectiles.length);
+        
+        // Add each projectile to the combat system
+        for (const projectile of projectiles) {
+            this.projectiles.push(projectile);
+            
+            // Create visual effect for each projectile
+            createParticleEffect(
+                projectile.x - Math.cos(projectile.angle) * 5,
+                projectile.y - Math.sin(projectile.angle) * 5,
+                10,
+                { r: 100, g: 200, b: 255 },
+                1,
+                15,
+                this.game.ctx
+            );
+        }
+        
+        // Play sound effect if available
+        if (typeof playSound === 'function') {
+            playSound('laser');
+        }
+        
+        console.log("Total projectiles after adding:", this.projectiles.length);
+    }
+    
     forceGameOver() {
         if (this.game) {
             this.game.isRunning = false;
@@ -496,6 +570,54 @@ class CombatSystem {
             document.getElementById('game-over-screen').classList.remove('hidden');
             console.log("COMBAT SYSTEM: Forced game over screen to show");
         }
+    }
+
+    spawnPowerUp(x, y) {
+        const powerUpTypes = ['health', 'weapon', 'shield', 'speed', 'fireRate', 'multishot'];
+        const type = powerUpTypes[Math.floor(Math.random() * powerUpTypes.length)];
+        const powerUp = new PowerUp(x, y, type);
+        this.powerUps.push(powerUp);
+        console.log('Spawned power-up:', type, 'at', x, y);
+    }
+
+    showFloatingText(x, y, text, color) {
+        const floatingText = {
+            x: x,
+            y: y,
+            text: text,
+            color: color,
+            alpha: 1,
+            velocity: -50, // Move upward
+            lifetime: 1000 // 1 second
+        };
+
+        // Create floating text element
+        const textEl = document.createElement('div');
+        textEl.style.position = 'absolute';
+        textEl.style.left = x + 'px';
+        textEl.style.top = y + 'px';
+        textEl.style.color = color;
+        textEl.style.fontWeight = 'bold';
+        textEl.style.textShadow = '2px 2px 2px black';
+        textEl.style.pointerEvents = 'none';
+        textEl.textContent = text;
+        
+        document.getElementById('game-screen').appendChild(textEl);
+
+        // Animate
+        let startTime = Date.now();
+        function animate() {
+            const elapsed = Date.now() - startTime;
+            if (elapsed < floatingText.lifetime) {
+                const progress = elapsed / floatingText.lifetime;
+                textEl.style.top = (y + floatingText.velocity * progress) + 'px';
+                textEl.style.opacity = 1 - progress;
+                requestAnimationFrame(animate);
+            } else {
+                textEl.remove();
+            }
+        }
+        animate();
     }
 }
 
