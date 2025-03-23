@@ -1,0 +1,359 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Arial', sans-serif;
+    background-color: #0a0a2a;
+    color: #ffffff;
+    overflow: hidden;
+}
+
+#game-container {
+    width: 100vw;
+    height: 100vh;
+    position: relative;
+}
+
+.screen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+.hidden {
+    display: none !important;
+}
+
+/* Menu Screen */
+#menu-screen {
+    background: linear-gradient(to bottom, #0a0a2a, #1a1a4a);
+    text-align: center;
+}
+
+#menu-screen h1 {
+    font-size: 4rem;
+    margin-bottom: 2rem;
+    color: #ffcc00;
+    text-shadow: 0 0 10px rgba(255, 204, 0, 0.7);
+}
+
+.instructions {
+    background-color: rgba(0, 0, 0, 0.5);
+    padding: 20px;
+    border-radius: 10px;
+    margin-top: 2rem;
+    max-width: 600px;
+}
+
+.instructions h2 {
+    color: #ffcc00;
+    margin-bottom: 1rem;
+}
+
+.instructions ul {
+    list-style-position: inside;
+    margin-top: 1rem;
+}
+
+button {
+    background-color: #4a4a8a;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    font-size: 1.2rem;
+    border-radius: 5px;
+    cursor: pointer;
+    margin: 10px;
+    transition: all 0.3s;
+}
+
+button:hover {
+    background-color: #6a6aaa;
+    transform: scale(1.05);
+}
+
+/* Game Screen */
+#game-screen {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    background-color: #000;
+}
+
+#game-canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+#hud {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background-color: rgba(0, 0, 0, 0.8);
+    padding: 15px;
+    border-radius: 8px;
+    font-size: 1.2rem;
+    border: 1px solid #4a4a8a;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    z-index: 100;
+}
+
+#hud div {
+    margin: 8px 0;
+    color: #ffffff;
+    text-shadow: 1px 1px 2px #000000;
+}
+
+#resource-count, #health-value, #current-location {
+    color: #ffcc00;
+    font-weight: bold;
+}
+
+/* Builder Screen */
+#builder-screen {
+    background: linear-gradient(to bottom, #0a0a2a, #1a1a4a);
+}
+
+#ship-parts {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+.part {
+    background-color: #2a2a5a;
+    padding: 10px 20px;
+    margin: 0 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.part:hover {
+    background-color: #3a3a7a;
+    transform: scale(1.05);
+}
+
+.part.selected {
+    background-color: #ffcc00;
+    color: #0a0a2a;
+}
+
+#ship-preview {
+    width: 400px;
+    height: 300px;
+    background-color: #000;
+    border: 2px solid #4a4a8a;
+    margin: 20px 0;
+    position: relative;
+}
+
+/* Planet Screen */
+#planet-screen {
+    background: linear-gradient(to bottom, #0a0a2a, #1a1a4a);
+}
+
+#planet-info {
+    background-color: rgba(0, 0, 0, 0.5);
+    padding: 20px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    max-width: 600px;
+}
+
+#planet-resources {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+.resource {
+    background-color: #2a2a5a;
+    padding: 10px;
+    margin: 5px;
+    border-radius: 5px;
+    text-align: center;
+}
+
+/* Combat Screen */
+#combat-screen {
+    background: url('assets/space-battle-bg.jpg') no-repeat center center;
+    background-size: cover;
+}
+
+#player-ship, #enemy-container {
+    width: 100%;
+    height: 40%;
+    position: relative;
+}
+
+#combat-controls {
+    position: absolute;
+    bottom: 20px;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+/* Game Over Screen */
+#game-over-screen {
+    background: linear-gradient(to bottom, #0a0a2a, #1a1a4a);
+    text-align: center;
+    z-index: 1000;
+}
+
+#game-over-screen h1 {
+    font-size: 4rem;
+    margin-bottom: 2rem;
+    color: #ff3333;
+    text-shadow: 0 0 15px rgba(255, 51, 51, 0.7);
+    animation: pulse 2s infinite;
+}
+
+.score-container {
+    background-color: rgba(0, 0, 0, 0.6);
+    padding: 2rem;
+    border-radius: 10px;
+    margin-bottom: 2rem;
+    min-width: 300px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+}
+
+.score-container div {
+    font-size: 1.5rem;
+    margin: 1rem 0;
+    text-align: left;
+}
+
+#score-value, #aliens-value, #waves-value, #time-value {
+    color: #ffcc00;
+    font-weight: bold;
+    float: right;
+}
+
+.game-over-buttons {
+    display: flex;
+    gap: 1rem;
+}
+
+.game-over-buttons button {
+    padding: 1rem 2rem;
+    font-size: 1.2rem;
+    background-color: #3355ff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.game-over-buttons button:hover {
+    background-color: #4466ff;
+    transform: scale(1.05);
+}
+
+#restart-game {
+    background-color: #33aa33;
+}
+
+#restart-game:hover {
+    background-color: #44bb44;
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.8; }
+    100% { opacity: 1; }
+}
+#debug-overlay {
+    display: none;
+}
+
+/* Victory Screen */
+#victory-screen {
+    background: linear-gradient(to bottom, #0a2a0a, #1a4a1a);
+    text-align: center;
+    z-index: 1000;
+}
+
+#victory-screen h1 {
+    font-size: 4rem;
+    margin-bottom: 2rem;
+    color: #00ff00;
+    text-shadow: 0 0 15px rgba(0, 255, 0, 0.7);
+    animation: victoryPulse 2s infinite;
+}
+
+.victory-message {
+    font-size: 1.5rem;
+    color: #ffff00;
+    margin: 2rem 0;
+    text-shadow: 0 0 10px rgba(255, 255, 0, 0.5);
+}
+
+@keyframes victoryPulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
+/* Difficulty Selection */
+.difficulty-select {
+    background-color: rgba(0, 0, 0, 0.5);
+    padding: 20px;
+    border-radius: 10px;
+    margin: 20px 0;
+}
+
+.difficulty-buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 15px;
+}
+
+.difficulty-btn {
+    padding: 10px 20px;
+    font-size: 1.1rem;
+    border: 2px solid #4a4a8a;
+    background-color: #2a2a5a;
+    color: white;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.difficulty-btn:hover {
+    transform: scale(1.05);
+}
+
+.difficulty-btn.selected {
+    background-color: #4a4a8a;
+    border-color: #ffcc00;
+    box-shadow: 0 0 10px rgba(255, 204, 0, 0.5);
+}
+
+/* Difficulty indicators during gameplay */
+.difficulty-indicator {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    padding: 5px 10px;
+    background-color: rgba(0, 0, 0, 0.7);
+    border-radius: 5px;
+    color: #ffcc00;
+    font-size: 0.9rem;
+}

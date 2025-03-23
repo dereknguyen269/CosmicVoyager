@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Space Game</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #000;
+            font-family: Arial, sans-serif;
+        }
+        canvas {
+            display: block;
+        }
+        #controls {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            z-index: 100;
+        }
+        button {
+            width: 60px;
+            height: 60px;
+            margin: 5px;
+            font-size: 24px;
+            background-color: rgba(100, 100, 200, 0.5);
+            color: white;
+            border: 2px solid white;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+        #shoot {
+            width: 120px;
+            background-color: rgba(200, 100, 100, 0.5);
+        }
+        #status {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: white;
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 10px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas"></canvas>
+    <div id="controls">
+        <button id="left">←</button>
+        <button id="up">↑</button>
+        <button id="right">→</button>
+        <button id="shoot">SHOOT</button>
+    </div>
+    <div id="status">
+        Use arrow keys or buttons to move. Space or SHOOT button to fire.
+    </div>
+
+    <script>
+        // Game setup
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        // Game state
+        const game = {
+            keys: {
+                up: false,
+                left: false,
+                right: false,
+                shoot: false
+            },
+            lastTime: 0,
+            projectiles: []
+        };
+
+        // Player ship
+        const ship = {
+            x: canvas.width / 2,
+            y: canvas.height / 2,
+            width: 40,
+            height: 30,
+            rotation: 0,
+            speed: 5,
+            rotationSpeed: 0.1,
+            lastShot: 0,
+            shootDelay: 300, // ms between shots
+            
+            update() {
+                // Handle rotation
+                if (game.keys.left) this.rotation -= this.rotationSpeed;
+                if (game.keys.right) this.rotation += this.rotationSpeed;
+                
+                // Handle movement
+                if (game.keys.up) {
+                    this.x += Math.cos(this.rotation) * this.speed;
+                    this.y += Math.sin(this.rotation) * this.speed;
+                }
+                
+                // Keep ship on screen
+                if (this.x < 0) this.x = 0;
+                if (this.x > canvas.width) this.x = canvas.width;
+                if (this.y < 0) this.y = 0;
+                if (this.y > canvas.height) this.y = canvas.height;
+                
+                // Handle shooting
+                if (game.keys.shoot) {
+                    const now = Date.now();
+                    if (now - this.lastShot > this.shootDelay) {
+                        this.shoot();
+                        this.lastShot = now;
+                    }
+                }
+            },
+            
+            draw() {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                ctx.rotate(this.rotation);
+                
+                // Draw ship
+                ctx.fillStyle = '#4488ff';
+                ctx.beginPath();
+                ctx.moveTo(this.width / 2, 0);
+                ctx.lineTo(-this.width / 2, -this.height / 2);
+                ctx.lineTo(-this.width / 3, 0);
+                ctx.lineTo(-this.width / 2, this.height / 2);
+                ctx.closePath();
+                ctx.fill();
+                
+                // Draw direction indicator
+                ctx.fillStyle = '#ffcc00';
+                ctx.beginPath();
+                ctx.arc(this.width / 2 - 5, 0, 3, 0, Math.PI * 2);
+                ctx.fill();
+                
+                ctx.restore();
+            },
+            
+            shoot() {
+                console.log('Shooting!');
+                const projectile = {
+                    x: this.x + Math.cos(this.rotation) * (this.width / 2),
+                    y: this.y + Math.sin(this.rotation) * (this.width / 2),
+                    speed: 10,
+                    angle: this.rotation,
+                    width: 10,
+                    height: 4,
+                    
+                    update() {
+                        this.x += Math.cos(this.angle) * this.speed;
+                        this.y += Math.sin(this.angle) * this.speed;
+                        
+                        // Check if out of bounds
+                        return this.x < 0 || this.x > canvas.width || 
+                               this.y < 0 || this.y > canvas.height;
+                    },
+                    
+                    draw() {
+                        ctx.save();
+                        ctx.translate(this.x, this.y);
+                        ctx.rotate(this.angle);
+                        
+                        // Add glow effect
+                        ctx.shadowColor = '#88ffff';
+                        ctx.shadowBlur = 10;
+                        
+                        ctx.fillStyle = '#88ffff';
+                        ctx.fillRect(0, -this.height / 2, this.width, this.height);
+                        
+                        ctx.restore();
+                    }
+                };
+                
+                game.projectiles.push(projectile);
+                
+                // Visual feedback
+                document.getElementById('status').textContent = 'Shot fired! Projectiles: ' + game.projectiles.length;
+            }
+        };
+
+        // Game loop
+        function gameLoop(timestamp) {
+            // Calculate delta time
+            const deltaTime = timestamp - game.lastTime;
+            game.lastTime = timestamp;
+            
+            // Clear canvas
+            ctx.fillStyle = '#000000';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Update and draw stars (simple background)
+            drawStars();
+            
+            // Update and draw ship
+            ship.update();
+            ship.draw();
+            
+            // Update and draw projectiles
+            for (let i = game.projectiles.length - 1; i >= 0; i--) {
+                const projectile = game.projectiles[i];
+                const isOutOfBounds = projectile.update();
+                
+                if (isOutOfBounds) {
+                    game.projectiles.splice(i, 1);
+                } else {
+                    projectile.draw();
+                }
+            }
+            
+            // Request next frame
+            requestAnimationFrame(gameLoop);
+        }
+
+        // Draw background stars
+        function drawStars() {
+            ctx.fillStyle = 'white';
+            for (let i = 0; i < 100; i++) {
+                const x = Math.random() * canvas.width;
+                const y = Math.random() * canvas.height;
+                const size = Math.random() * 2 + 1;
+                ctx.fillRect(x, y, size, size);
+            }
+        }
+
+        // Input handling
+        window.addEventListener('keydown', (e) => {
+            switch (e.code) {
+                case 'ArrowUp':
+                case 'KeyW':
+                    game.keys.up = true;
+                    break;
+                case 'ArrowLeft':
+                case 'KeyA':
+                    game.keys.left = true;
+                    break;
+                case 'ArrowRight':
+                case 'KeyD':
+                    game.keys.right = true;
+                    break;
+                case 'Space':
+                    game.keys.shoot = true;
+                    break;
+            }
+        });
+
+        window.addEventListener('keyup', (e) => {
+            switch (e.code) {
+                case 'ArrowUp':
+                case 'KeyW':
+                    game.keys.up = false;
+                    break;
+                case 'ArrowLeft':
+                case 'KeyA':
+                    game.keys.left = false;
+                    break;
+                case 'ArrowRight':
+                case 'KeyD':
+                    game.keys.right = false;
+                    break;
+                case 'Space':
+                    game.keys.shoot = false;
+                    break;
+            }
+        });
+
+        // Touch controls
+        document.getElementById('up').addEventListener('mousedown', () => game.keys.up = true);
+        document.getElementById('up').addEventListener('mouseup', () => game.keys.up = false);
+        document.getElementById('up').addEventListener('touchstart', (e) => { e.preventDefault(); game.keys.up = true; });
+        document.getElementById('up').addEventListener('touchend', () => game.keys.up = false);
+        
+        document.getElementById('left').addEventListener('mousedown', () => game.keys.left = true);
+        document.getElementById('left').addEventListener('mouseup', () => game.keys.left = false);
+        document.getElementById('left').addEventListener('touchstart', (e) => { e.preventDefault(); game.keys.left = true; });
+        document.getElementById('left').addEventListener('touchend', () => game.keys.left = false);
+        
+        document.getElementById('right').addEventListener('mousedown', () => game.keys.right = true);
+        document.getElementById('right').addEventListener('mouseup', () => game.keys.right = false);
+        document.getElementById('right').addEventListener('touchstart', (e) => { e.preventDefault(); game.keys.right = true; });
+        document.getElementById('right').addEventListener('touchend', () => game.keys.right = false);
+        
+        document.getElementById('shoot').addEventListener('click', () => ship.shoot());
+        document.getElementById('shoot').addEventListener('touchstart', (e) => { e.preventDefault(); ship.shoot(); });
+
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            ship.x = canvas.width / 2;
+            ship.y = canvas.height / 2;
+        });
+
+        // Start game
+        requestAnimationFrame(gameLoop);
+    </script>
+</body>
+</html>

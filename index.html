@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cosmic Voyager - Space Exploration Game</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="game-container">
+        <div id="menu-screen" class="screen">
+            <h1>Cosmic Voyager</h1>
+            <div class="difficulty-select">
+                <h2>Select Difficulty</h2>
+                <div class="difficulty-buttons">
+                    <button id="easy-mode" class="difficulty-btn selected">Easy</button>
+                    <button id="normal-mode" class="difficulty-btn">Normal</button>
+                    <button id="hard-mode" class="difficulty-btn">Hard</button>
+                    <button id="very-hard-mode" class="difficulty-btn">Very Hard</button>
+                </div>
+            </div>
+            <button id="start-button">Start Game</button>
+            <div class="instructions">
+                <h2>How to Play</h2>
+                <p>Build your spaceship, explore planets, and defend against alien attacks!</p>
+                <ul>
+                    <li>Use WASD or arrow keys to navigate</li>
+                    <li>Space to shoot</li>
+                    <li>E to interact with objects</li>
+                    <li>B to open the ship builder</li>
+                </ul>
+            </div>
+        </div>
+        <div id="game-screen" class="screen hidden">
+            <canvas id="game-canvas"></canvas>
+            <div id="hud">
+                <div id="resources">Resources: <span id="resource-count">0</span></div>
+                <div id="health">Health: <span id="health-value">100</span></div>
+                <div id="wave">Wave: <span id="wave-counter">1/5</span></div>
+                <div id="location">Location: <span id="current-location">Home Base</span></div>
+            </div>
+            <button id="force-game-over" style="position: absolute; top: 10px; right: 10px; z-index: 1000; background: red; color: white; padding: 5px 10px; border: none; cursor: pointer;">Test Game Over</button>
+            <button id="open-builder" style="position: absolute; top: 50px; right: 10px; z-index: 1000; background: blue; color: white; padding: 5px 10px; border: none; cursor: pointer;">Open Ship Builder</button>
+        </div>
+        <div id="builder-screen" class="screen hidden">
+            <h2>Ship Builder</h2>
+            <div id="ship-parts">
+                <div class="part" data-part="engine">Engine</div>
+                <div class="part" data-part="weapons">Weapons</div>
+                <div class="part" data-part="shield">Shield</div>
+                <div class="part" data-part="hull">Hull</div>
+            </div>
+            <div id="ship-preview"></div>
+            <button id="save-ship">Save Ship</button>
+            <button id="exit-builder">Exit Builder</button>
+        </div>
+        <div id="planet-screen" class="screen hidden">
+            <h2>Planet Exploration</h2>
+            <div id="planet-info"></div>
+            <div id="planet-resources"></div>
+            <button id="collect-resources">Collect Resources</button>
+            <button id="leave-planet">Return to Ship</button>
+        </div>
+        <div id="game-over-screen" class="screen hidden">
+            <h1>Game Over</h1>
+            <div class="score-container">
+                <div id="final-score">Score: <span id="score-value">0</span></div>
+                <div id="aliens-defeated">Aliens Defeated: <span id="aliens-value">0</span></div>
+                <div id="waves-cleared">Waves Cleared: <span id="waves-value">0</span></div>
+                <div id="time-survived">Time Survived: <span id="time-value">0</span> seconds</div>
+            </div>
+            <div class="game-over-buttons">
+                <button id="restart-button">Play Again</button>
+                <button id="main-menu-button">Return to Menu</button>
+            </div>
+        </div>
+        <div id="victory-screen" class="screen hidden">
+            <h1>Victory!</h1>
+            <div class="score-container">
+                <div id="victory-score">Final Score: <span id="victory-score-value">0</span></div>
+                <div id="victory-aliens">Aliens Defeated: <span id="victory-aliens-value">0</span></div>
+                <div id="victory-waves">Waves Cleared: <span id="victory-waves-value">0</span></div>
+                <div id="victory-time">Time: <span id="victory-time-value">0</span> seconds</div>
+            </div>
+            <div class="victory-message">
+                Congratulations! You've saved the galaxy!
+            </div>
+            <div class="game-over-buttons">
+                <button id="play-again-button">Play Again</button>
+                <button id="victory-menu-button">Return to Menu</button>
+            </div>
+        </div>
+        <div id="combat-screen" class="screen hidden">
+            <div id="player-ship"></div>
+            <div id="enemy-container"></div>
+            <div id="combat-controls">
+                <button id="attack-button">Attack</button>
+                <button id="defend-button">Defend</button>
+                <button id="escape-button">Escape</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Game Scripts -->
+    <script src="js/utils.js"></script>
+    <script src="js/entities.js"></script>
+    <script src="js/shipBuilder.js"></script>
+    <script src="js/planets.js"></script>
+    <script src="js/combat.js"></script>
+    <script src="js/game.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>
